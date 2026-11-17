@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>綜合所得稅試算系統 (2026年制)</title>
+    <!-- 引入 Tailwind CSS 進行現代化快速排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 隱藏不想顯示的動態區塊 */
+        .hidden-section { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">綜合所得稅試算系統</h1>
+            <p class="mt-2 text-sm text-slate-600">外包專案展示版 | 支援標準與列舉扣除額動態切換</p>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+            <form id="taxForm" class="p-8 space-y-8">
+                
+                <!-- 區塊 1：基本資料 -->
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-slate-900 border-b pb-2">1. 基本資料與扶養</h3>
+                    <div class="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">您的年齡</label>
+                            <input type="number" id="age" required min="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">是否有配偶</label>
+                            <select id="has_spouse" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="toggleVisibility('has_spouse', 'true', 'spouse_age_section')">
+                                <option value="false">否</option>
+                                <option value="true">是</option>
+                            </select>
+                        </div>
+                        <div id="spouse_age_section" class="hidden-section">
+                            <label class="block text-sm font-medium text-slate-700">配偶年齡</label>
+                            <input type="number" id="spouse_age" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">扶養親屬與小孩人數</label>
+                            <input type="number" id="kids_quantity" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 區塊 2：所得資料 -->
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-slate-900 border-b pb-2">2. 所得資料</h3>
+                    <div class="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">平均月薪 (新台幣)</label>
+                            <input type="number" id="monthly_salary" required min="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">利息與股利所得 (千元)</label>
+                            <input type="number" id="interest_income" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">是否有退職/退休金所得</label>
+                            <select id="has_retirement_income" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="toggleVisibility('has_retirement_income', 'true', 'retirement_section')">
+                                <option value="false">否</option>
+                                <option value="true">是</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="retirement_section" class="hidden-section mt-6 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4 bg-slate-50 p-4 rounded-md border border-slate-200">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">領取方式</label>
+                            <select id="retirement_claim_type" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="單次">單次</option>
+                                <option value="分期">分期</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">退職所得金額 (萬元)</label>
+                            <input type="number" id="retirement_amount" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 區塊 3：扣除額設定 -->
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-slate-900 border-b pb-2">3. 扣除額設定</h3>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-slate-700">扣除額計算方式</label>
+                        <select id="deduction_method" class="mt-1 block w-full sm:w-1/2 border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="toggleVisibility('deduction_method', '列舉扣除額', 'itemized_section')">
+                            <option value="標準扣除額">標準扣除額 (直接扣除 12 萬)</option>
+                            <option value="列舉扣除額">列舉扣除額 (須填寫明細)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 列舉扣除額動態區塊 -->
+                    <div id="itemized_section" class="hidden-section mt-6 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4 bg-blue-50 p-4 rounded-md border border-blue-100">
+                        <div><label class="block text-sm font-medium text-slate-700">一般捐贈 (萬元)</label><input type="number" id="donate_general" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">對政府捐贈 (萬元)</label><input type="number" id="donate_gov" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">人身保險費 (萬元)</label><input type="number" id="insurance_general" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">健保/勞保費 (萬元)</label><input type="number" id="insurance_social" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">醫藥及生育費 (萬元)</label><input type="number" id="medical_expenses" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">災害損失 (萬元)</label><input type="number" id="disaster_losses" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                        <div><label class="block text-sm font-medium text-slate-700">自用住宅購屋借款利息 (萬元)</label><input type="number" id="mortgage_interest" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- 區塊 4：特別扣除額與其他狀況 -->
+                <div>
+                    <h3 class="text-lg leading-6 font-medium text-slate-900 border-b pb-2">4. 特別狀況與扶養屬性</h3>
+                    <div class="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">身心障礙人數</label>
+                            <input type="number" id="disabilities" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">大專院校學生人數</label>
+                            <input type="number" id="undergrad_students" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">5歲以下幼兒人數</label>
+                            <input type="number" id="under_grade1_kids" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">符合長照資格人數</label>
+                            <input type="number" id="long_term_care_count" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">是否有自用住宅</label>
+                            <select id="has_house" class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" onchange="toggleVisibility('has_house', 'false', 'rent_section')">
+                                <option value="true">是</option>
+                                <option value="false">否 (租屋)</option>
+                            </select>
+                        </div>
+                        <div id="rent_section" class="hidden-section">
+                            <label class="block text-sm font-medium text-slate-700">房屋租金支出 (萬元)</label>
+                            <input type="number" id="rent_paid" min="0" value="0" class="mt-1 block w-full border border-slate-300 rounded-md py-2 px-3 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按鈕 -->
+                <div class="pt-4">
+                    <button type="submit" id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        開始試算稅額
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 運算結果展示區塊 -->
+        <div id="resultCard" class="hidden-section mt-8 bg-white shadow-xl rounded-2xl overflow-hidden border-t-4 border-green-500">
+            <div class="px-4 py-5 sm:p-6 text-center">
+                <h3 class="text-xl leading-6 font-bold text-slate-900">試算結果</h3>
+                <div class="mt-6 grid grid-cols-2 gap-4 text-left sm:grid-cols-4">
+                    <div class="bg-slate-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm text-slate-500 font-medium">薪資總額</p>
+                        <p class="mt-1 text-2xl font-semibold text-slate-900" id="res_gross">0 萬</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm text-slate-500 font-medium">所得淨額 (課稅基礎)</p>
+                        <p class="mt-1 text-2xl font-semibold text-slate-900" id="res_taxable">0 萬</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm text-slate-500 font-medium">適用稅率</p>
+                        <p class="mt-1 text-2xl font-semibold text-blue-600" id="res_rate">0 %</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg shadow-sm border border-green-100">
+                        <p class="text-sm text-green-700 font-bold">最終應納稅額 (新台幣)</p>
+                        <p class="mt-1 text-3xl font-extrabold text-green-600" id="res_payable_twd">NT$ 0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 錯誤提示區塊 -->
+        <div id="errorCard" class="hidden-section mt-6 bg-red-50 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 font-medium" id="errorMessage">發生錯誤</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 前端互動與 API 串接邏輯 -->
+    <script>
+        // ==========================================
+        // 核心設定：請將此處替換為您的 Render API 網址
+        // ==========================================
+        const API_BASE_URL = "https://py-tax.onrender.com/"; 
+
+        // 動態顯示/隱藏表單區塊的輔助函數
+        function toggleVisibility(selectId, targetValue, sectionId) {
+            const selectElement = document.getElementById(selectId);
+            const sectionElement = document.getElementById(sectionId);
+            if (selectElement.value === targetValue) {
+                sectionElement.style.display = 'block';
+            } else {
+                sectionElement.style.display = 'none';
+            }
+        }
+
+        // 監聽表單提交事件
+        document.getElementById('taxForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止原生的表單重新整理
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultCard = document.getElementById('resultCard');
+            const errorCard = document.getElementById('errorCard');
+            
+            // UI 狀態：載入中
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                運算中...
+            `;
+            resultCard.style.display = 'none';
+            errorCard.style.display = 'none';
+
+            // 抓取並轉換欄位型別，建構 JSON Payload
+            const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+            const getBool = (id) => document.getElementById(id).value === 'true';
+            const getString = (id) => document.getElementById(id).value;
+
+            const payload = {
+                age: getVal('age'),
+                has_spouse: getBool('has_spouse'),
+                spouse_age: getVal('spouse_age'),
+                kids_quantity: getVal('kids_quantity'),
+                monthly_salary: getVal('monthly_salary'),
+                deduction_method: getString('deduction_method'),
+                donate_general: getVal('donate_general'),
+                donate_gov: getVal('donate_gov'),
+                insurance_general: getVal('insurance_general'),
+                insurance_social: getVal('insurance_social'),
+                medical_expenses: getVal('medical_expenses'),
+                disaster_losses: getVal('disaster_losses'),
+                mortgage_interest: getVal('mortgage_interest'),
+                financial_trading_losses: 0, // 原邏輯較少用，此處預設 0
+                interest_income: getVal('interest_income'),
+                disabilities: getVal('disabilities'),
+                undergrad_students: getVal('undergrad_students'),
+                under_grade1_kids: getVal('under_grade1_kids'),
+                long_term_care_count: getVal('long_term_care_count'),
+                has_house: getBool('has_house'),
+                rent_paid: getVal('rent_paid'),
+                has_retirement_income: getBool('has_retirement_income'),
+                retirement_amount: getVal('retirement_amount'),
+                retirement_claim_type: getString('retirement_claim_type')
+            };
+
+            try {
+                // 發送 POST 請求至 Flask API
+                const response = await fetch(`${API_BASE_URL}/api/v1/tax/calculate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const resData = await response.json();
+
+                if (response.ok && resData.status === 'success') {
+                    // 渲染成功結果
+                    const data = resData.data;
+                    document.getElementById('res_gross').innerText = `${data.gross_income_wan} 萬`;
+                    document.getElementById('res_taxable').innerText = `${data.taxable_income_wan} 萬`;
+                    document.getElementById('res_rate').innerText = `${data.tax_rate_percent} %`;
+                    // 格式化新台幣加上千分位
+                    document.getElementById('res_payable_twd').innerText = `NT$ ${data.tax_payable_twd.toLocaleString('zh-TW')}`;
+                    
+                    resultCard.style.display = 'block';
+                    // 網頁平滑向下滾動至結果
+                    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    // 處理 API 拋出的商業邏輯錯誤
+                    throw new Error(resData.message || '伺服器回傳錯誤');
+                }
+            } catch (error) {
+                // 處理網路錯誤或 CORS 問題
+                document.getElementById('errorMessage').innerText = `連線失敗或發生錯誤：${error.message} (請確認 API_BASE_URL 設定正確且 Render 伺服器已喚醒)`;
+                errorCard.style.display = 'block';
+            } finally {
+                // 恢復按鈕狀態
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '開始試算稅額';
+            }
+        });
+    </script>
+</body>
+</html>
